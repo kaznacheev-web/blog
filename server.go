@@ -2,81 +2,36 @@ package blog
 
 import (
 	"context"
-	"fmt"
 	"github.com/kaznacheev-web/blog/internal/web"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
-	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gorilla/mux"
 
 	"github.com/kaznacheev-web/blog/internal/config"
-	"github.com/kaznacheev-web/blog/internal/database"
-	"github.com/kaznacheev-web/blog/internal/handlers"
 )
 
-// StartServer runs website server with configuration
-func StartServer(ctx context.Context, cfg config.MainConfig) error {
-	r := gin.Default()
+func Run(cfg config.MainConfig) error {
+	r := mux.NewRouter()
+	s := web.NewServer(cfg.Service, r)
 
-	db, err := database.NewMongoDatabase(cfg)
-	if err != nil {
-		return err
-	}
-	h := handlers.NewRequestHandler(ctx, cfg, db)
-
-	r.GET("/", h.GetArticleList)
-	r.GET("/article/:slug", h.GetArticlePage)
-	r.GET("/talks", h.GetTalkList)
-	r.GET("/talks/:slug", h.GetTalkPage)
-	r.GET("/about", h.GetAboutPage)
-
-	// admin := r.Group("/admin_box", gin.BasicAuth(gin.Accounts{}))
-
-	// _ = admin
-
-	log.Println(cfg)
-
-	srv := &http.Server{
-		Addr:    fmt.Sprintf("%s:%s", cfg.Service.Host, cfg.Service.Port),
-		Handler: r,
-	}
-
-	// setup graceful shutdown
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-
+	// Run our server in a goroutine so that it doesn't block.
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+		log.Println("starting server")
+		if err := s.ListenAndServe(); err != nil {
+			log.Println(err)
 		}
 	}()
 
-	select {
-	case <-quit:
-	case <-ctx.Done():
-	}
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	<-c
 
-	gsCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	return srv.Shutdown(gsCtx)
-}
 
-func Run(cfg config.Service) error {
-	r := mux.NewRouter()
-	s := web.NewServer(r)
-	return s.ListenAndServe()
-}
-
-// Handler is an http request handler interface
-type Handler interface {
-	GetArticleList(*gin.Context)
-	GetArticlePage(*gin.Context)
-	GetTalkList(*gin.Context)
-	GetTalkPage(*gin.Context)
-	GetAboutPage(*gin.Context)
+	log.Println("shutting down")
+	return s.Shutdown(ctx)
 }

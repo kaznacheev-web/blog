@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"log"
 
@@ -27,7 +26,7 @@ func main() {
 	}
 
 	log.Printf("starting server at %s:%s", cfg.Service.Host, cfg.Service.Port)
-	if err := blog.StartServer(context.Background(), cfg); err != nil {
+	if err := blog.Run(cfg); err != nil {
 		log.Fatal(err)
 	}
 }

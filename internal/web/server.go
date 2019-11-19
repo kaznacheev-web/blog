@@ -2,6 +2,7 @@ package web
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/kaznacheev-web/blog/internal/config"
 	"html/template"
 	"net/http"
 	"time"
@@ -15,11 +16,11 @@ type Server struct {
 	r *mux.Router
 }
 
-func NewServer(r *mux.Router) *Server {
+func NewServer(cfg config.Server, r *mux.Router) *Server {
 	return &Server{
 		Server: http.Server{
 			Handler:      r,
-			Addr:         "localhost:8080",
+			Addr:         cfg.Host + ":" + cfg.Port,
 			WriteTimeout: 15 * time.Second,
 			ReadTimeout:  15 * time.Second,
 		},
