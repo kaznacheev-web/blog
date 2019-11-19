@@ -3,6 +3,7 @@ package blog
 import (
 	"context"
 	"fmt"
+	"github.com/kaznacheev-web/blog/internal/web"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/mux"
 
 	"github.com/kaznacheev-web/blog/internal/config"
 	"github.com/kaznacheev-web/blog/internal/database"
@@ -62,6 +64,12 @@ func StartServer(ctx context.Context, cfg config.MainConfig) error {
 	gsCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	return srv.Shutdown(gsCtx)
+}
+
+func Run(cfg config.Service) error {
+	r := mux.NewRouter()
+	s := web.NewServer(r)
+	return s.ListenAndServe()
 }
 
 // Handler is an http request handler interface
