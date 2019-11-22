@@ -19,13 +19,13 @@ const (
 	RU Language = "RU"
 )
 
-type MongoMeta struct {
+type mongoMeta struct {
 	ID        bson.ObjectId `bson:"_id,omitempty"`
 	CreatedAt time.Time     `json:"created_at"`
 	UpdatedAt time.Time     `json:"updated_at"`
 }
 
-type TextEntity struct {
+type textEntity struct {
 	Title    string   `json:"title"`
 	Slug     string   `json:"slug"`
 	Text     string   `json:"text"`
@@ -34,8 +34,8 @@ type TextEntity struct {
 
 // Article describes an article entity
 type Article struct {
-	MongoMeta
-	TextEntity
+	mongoMeta
+	textEntity
 	Preview   string    `json:"preview"`
 	Published bool      `json:"published"`
 	PubDate   time.Time `json:"publication_date"`
@@ -44,8 +44,8 @@ type Article struct {
 
 // Talk describes a talk entity
 type Talk struct {
-	MongoMeta
-	TextEntity
+	mongoMeta
+	textEntity
 	VideoURL  *string   `json:"video_url,omitempty"`
 	SlideURL  *string   `json:"slide_url,omitempty"`
 	Published bool      `json:"published"`
@@ -56,8 +56,8 @@ type Talk struct {
 
 // SimplePage describes a page with a free text structure
 type SimplePage struct {
-	MongoMeta
-	TextEntity
+	mongoMeta
+	textEntity
 	// PageKey is a unique key to find this single page
 	PageKey string `json:"page_key"`
 }
