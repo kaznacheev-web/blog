@@ -22,7 +22,7 @@ type StorageManager interface {
 	GetSimplePage(key string) (*models.SimplePage, error)
 }
 
-func (s *Server) handleArticlesGetAll() http.HandlerFunc {
+func (s *Server) HandleArticlesGetAll() http.HandlerFunc {
 	type response struct {
 		Articles   []models.Article
 		TotalPages int
@@ -60,7 +60,7 @@ func (s *Server) handleArticlesGetAll() http.HandlerFunc {
 	}
 }
 
-func (s *Server) handleArticlesGetOne() http.HandlerFunc {
+func (s *Server) HandleArticlesGetOne() http.HandlerFunc {
 	templateFunc := s.mustTemplate("article")
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +78,7 @@ func (s *Server) handleArticlesGetOne() http.HandlerFunc {
 	}
 }
 
-func (s *Server) handleTalksGetAll() http.HandlerFunc {
+func (s *Server) HandleTalksGetAll() http.HandlerFunc {
 	type response struct {
 		Talks      []models.Talk
 		TotalPages int
@@ -116,7 +116,7 @@ func (s *Server) handleTalksGetAll() http.HandlerFunc {
 	}
 }
 
-func (s *Server) handleTalksGetOne() http.HandlerFunc {
+func (s *Server) HandleTalksGetOne() http.HandlerFunc {
 	templateFunc := s.mustTemplate("talk")
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -134,7 +134,7 @@ func (s *Server) handleTalksGetOne() http.HandlerFunc {
 	}
 }
 
-func (s *Server) handleAboutGet() http.HandlerFunc {
+func (s *Server) HandleAboutGet() http.HandlerFunc {
 	templateFunc := s.mustTemplate("about")
 
 	return func(w http.ResponseWriter, r *http.Request) {

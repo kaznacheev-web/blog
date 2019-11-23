@@ -6,7 +6,12 @@ type Server struct {
 	Host string `yaml:"host" env:"HOST" env-description:"Server host"`
 }
 
+type Database struct {
+}
+
 // MainConfig is a whole set of app settings
 type MainConfig struct {
-	Service Server `yaml:"service"`
+	Service  Server   `yaml:"service"`
+	Database Database `yaml:"database"`
+	RootDir  string
 }

@@ -2,7 +2,6 @@ package blog
 
 import (
 	"context"
-	"github.com/kaznacheev-web/blog/internal/web"
 	"log"
 	"os"
 	"os/signal"
@@ -11,11 +10,19 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/kaznacheev-web/blog/internal/config"
+	"github.com/kaznacheev-web/blog/internal/database"
+	"github.com/kaznacheev-web/blog/internal/web"
 )
 
 func Run(cfg config.MainConfig) error {
 	r := mux.NewRouter()
-	s := web.NewServer(cfg.Service, r)
+
+	mdb, err := database.NewMongoDatabase(cfg.Database)
+	if err != nil {
+		return err
+	}
+
+	s := web.NewServer(cfg.Service, r, mdb, cfg.RootDir)
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
