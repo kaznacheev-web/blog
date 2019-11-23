@@ -4,8 +4,8 @@ This is my personal blog (and the other website) written in Go
 
 ## Roadmap
 
-- [ ] routing
-- [ ] models
+- [x] routing
+- [x] models
 - [ ] database implementation
 - [ ] pages
     - [ ] articles
