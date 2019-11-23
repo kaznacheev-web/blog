@@ -20,3 +20,5 @@ This is my personal blog (and the other website) written in Go
     - [ ] editor
 - [ ] language/translation
 - [X] container
+- [ ] tests
+- [ ] CI
