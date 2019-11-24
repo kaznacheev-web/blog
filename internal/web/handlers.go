@@ -1,20 +1,26 @@
 package web
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 
+	"github.com/kaznacheev-web/blog/internal/database"
 	"github.com/kaznacheev-web/blog/internal/models"
 )
 
+//go:generate mockery -name=StorageManager -output=mocks
+
 // StorageManager processes storage operations
 type StorageManager interface {
+	// GetArticles returns a list of articles limited by the page number
 	GetArticles(page int) ([]models.Article, error)
+	// GetArticle returns a certain article
 	GetArticle(slug string) (*models.Article, error)
 	GetArticleCount() (int, error)
-
+	// GetTalks returns a list of talks limited by the page number
 	GetTalks(page int) ([]models.Talk, error)
 	GetTalk(slug string) (*models.Talk, error)
 	GetTalkCount() (int, error)
@@ -66,9 +72,15 @@ func (s *Server) HandleArticlesGetOne() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slug := mux.Vars(r)["slug"]
 		article, err := s.sm.GetArticle(slug)
-		if err != nil {
+		if errors.Is(err, database.ErrorNotFound) {
 			s.handleError(w, errorMessage{
 				Status: http.StatusNotFound,
+				Text:   err.Error(),
+			})
+			return
+		} else if err != nil {
+			s.handleError(w, errorMessage{
+				Status: http.StatusInternalServerError,
 				Text:   err.Error(),
 			})
 			return
@@ -122,9 +134,15 @@ func (s *Server) HandleTalksGetOne() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slug := mux.Vars(r)["slug"]
 		talk, err := s.sm.GetTalk(slug)
-		if err != nil {
+		if errors.Is(err, database.ErrorNotFound) {
 			s.handleError(w, errorMessage{
 				Status: http.StatusNotFound,
+				Text:   err.Error(),
+			})
+			return
+		} else if err != nil {
+			s.handleError(w, errorMessage{
+				Status: http.StatusInternalServerError,
 				Text:   err.Error(),
 			})
 			return
@@ -139,9 +157,15 @@ func (s *Server) HandleAboutGet() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		page, err := s.sm.GetSimplePage("about")
-		if err != nil {
+		if errors.Is(err, database.ErrorNotFound) {
 			s.handleError(w, errorMessage{
 				Status: http.StatusNotFound,
+				Text:   err.Error(),
+			})
+			return
+		} else if err != nil {
+			s.handleError(w, errorMessage{
+				Status: http.StatusInternalServerError,
 				Text:   err.Error(),
 			})
 			return
