@@ -7,6 +7,7 @@ type Server struct {
 }
 
 type Database struct {
+	URI string `yaml:"uri" env:"MONGO_URI" env-description:"MongoDB connection URI"`
 }
 
 // MainConfig is a whole set of app settings

@@ -1,3 +1,6 @@
 service:
   host: ""
   port: "8080"
+
+database:
+  uri: "mongodb://localhost:27017"

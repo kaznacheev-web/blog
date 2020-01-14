@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"html/template"
 	"net/http"
 	"time"
@@ -34,8 +35,14 @@ func NewServer(cfg config.Server, r *mux.Router, sm StorageManager, rootPath str
 		sm:       sm,
 		rootPath: rootPath,
 	}
-	s.respErrorFunc = s.mustTemplate("error")
-	s.respErrorNotFoundFunc = s.mustTemplate("error404")
+	// s.respErrorFunc = s.mustTemplate("error")
+	// s.respErrorNotFoundFunc = s.mustTemplate("error404")
+	// TODO: remove temp functions
+	errFunc := func(w http.ResponseWriter, d interface{}) {
+		json.NewEncoder(w).Encode(d)
+	}
+	s.respErrorFunc = errFunc
+	s.respErrorNotFoundFunc = errFunc
 
 	s.route()
 	return s

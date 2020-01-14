@@ -1,7 +1,10 @@
 package web
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -15,17 +18,24 @@ import (
 
 // StorageManager processes storage operations
 type StorageManager interface {
-	// GetArticles returns a list of articles limited by the page number
-	GetArticles(page int) ([]models.Article, error)
-	// GetArticle returns a certain article
-	GetArticle(slug string) (*models.Article, error)
-	GetArticleCount() (int, error)
-	// GetTalks returns a list of talks limited by the page number
-	GetTalks(page int) ([]models.Talk, error)
-	GetTalk(slug string) (*models.Talk, error)
-	GetTalkCount() (int, error)
+	// Read operations
 
-	GetSimplePage(key string) (*models.SimplePage, error)
+	// GetArticles returns a list of articles limited by the page number
+	GetArticles(ctx context.Context, page int) ([]models.Article, int, error)
+	// GetArticle returns a certain article
+	GetArticle(ctx context.Context, slug string) (*models.Article, error)
+	GetArticleCount(ctx context.Context) (int, error)
+	// GetTalks returns a list of talks limited by the page number
+	GetTalks(ctx context.Context, page int) ([]models.Talk, int, error)
+	GetTalk(ctx context.Context, slug string) (*models.Talk, error)
+	GetTalkCount(ctx context.Context) (int, error)
+
+	GetSimplePage(ctx context.Context, slug string) (*models.SimplePage, error)
+
+	// Update operations
+
+	// IncrementArticleVCounter(slug string) error
+	// IncrementTalkVCounter(slug string) error
 }
 
 func (s *Server) HandleArticlesGetAll() http.HandlerFunc {
@@ -34,21 +44,12 @@ func (s *Server) HandleArticlesGetAll() http.HandlerFunc {
 		TotalPages int
 	}
 
-	templateFunc := s.mustTemplate("articles")
+	// templateFunc := s.mustTemplate("articles")
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		page, _ := strconv.Atoi(r.FormValue("page"))
 
-		articles, err := s.sm.GetArticles(page)
-		if err != nil {
-			s.handleError(w, errorMessage{
-				Status: http.StatusInternalServerError,
-				Text:   err.Error(),
-			})
-			return
-		}
-
-		total, err := s.sm.GetArticleCount()
+		articles, total, err := s.sm.GetArticles(r.Context(), page)
 		if err != nil {
 			s.handleError(w, errorMessage{
 				Status: http.StatusInternalServerError,
@@ -62,17 +63,19 @@ func (s *Server) HandleArticlesGetAll() http.HandlerFunc {
 			TotalPages: total,
 		}
 
-		templateFunc(w, &d)
+		// templateFunc(w, &d)
+		json.NewEncoder(w).Encode(&d)
 	}
 }
 
 func (s *Server) HandleArticlesGetOne() http.HandlerFunc {
-	templateFunc := s.mustTemplate("article")
+	// templateFunc := s.mustTemplate("article")
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		slug := mux.Vars(r)["slug"]
-		article, err := s.sm.GetArticle(slug)
-		if errors.Is(err, database.ErrorNotFound) {
+
+		article, err := s.sm.GetArticle(r.Context(), slug)
+		if errors.Is(err, database.ErrNotFound) {
 			s.handleError(w, errorMessage{
 				Status: http.StatusNotFound,
 				Text:   err.Error(),
@@ -86,7 +89,8 @@ func (s *Server) HandleArticlesGetOne() http.HandlerFunc {
 			return
 		}
 
-		templateFunc(w, article)
+		// templateFunc(w, article)
+		json.NewEncoder(w).Encode(article)
 	}
 }
 
@@ -96,21 +100,12 @@ func (s *Server) HandleTalksGetAll() http.HandlerFunc {
 		TotalPages int
 	}
 
-	templateFunc := s.mustTemplate("talks")
+	// templateFunc := s.mustTemplate("talks")
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		page, _ := strconv.Atoi(r.FormValue("page"))
 
-		talks, err := s.sm.GetTalks(page)
-		if err != nil {
-			s.handleError(w, errorMessage{
-				Status: http.StatusInternalServerError,
-				Text:   err.Error(),
-			})
-			return
-		}
-
-		total, err := s.sm.GetTalkCount()
+		talks, total, err := s.sm.GetTalks(r.Context(), page)
 		if err != nil {
 			s.handleError(w, errorMessage{
 				Status: http.StatusInternalServerError,
@@ -124,17 +119,18 @@ func (s *Server) HandleTalksGetAll() http.HandlerFunc {
 			TotalPages: total,
 		}
 
-		templateFunc(w, &d)
+		// templateFunc(w, &d)
+		json.NewEncoder(w).Encode(&d)
 	}
 }
 
 func (s *Server) HandleTalksGetOne() http.HandlerFunc {
-	templateFunc := s.mustTemplate("talk")
+	// templateFunc := s.mustTemplate("talk")
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		slug := mux.Vars(r)["slug"]
-		talk, err := s.sm.GetTalk(slug)
-		if errors.Is(err, database.ErrorNotFound) {
+		talk, err := s.sm.GetTalk(r.Context(), slug)
+		if errors.Is(err, database.ErrNotFound) {
 			s.handleError(w, errorMessage{
 				Status: http.StatusNotFound,
 				Text:   err.Error(),
@@ -148,16 +144,17 @@ func (s *Server) HandleTalksGetOne() http.HandlerFunc {
 			return
 		}
 
-		templateFunc(w, talk)
+		// templateFunc(w, talk)
+		json.NewEncoder(w).Encode(talk)
 	}
 }
 
 func (s *Server) HandleAboutGet() http.HandlerFunc {
-	templateFunc := s.mustTemplate("about")
+	// templateFunc := s.mustTemplate("about")
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		page, err := s.sm.GetSimplePage("about")
-		if errors.Is(err, database.ErrorNotFound) {
+		page, err := s.sm.GetSimplePage(r.Context(), "about")
+		if errors.Is(err, database.ErrNotFound) {
 			s.handleError(w, errorMessage{
 				Status: http.StatusNotFound,
 				Text:   err.Error(),
@@ -171,7 +168,8 @@ func (s *Server) HandleAboutGet() http.HandlerFunc {
 			return
 		}
 
-		templateFunc(w, page)
+		// templateFunc(w, page)
+		json.NewEncoder(w).Encode(page)
 	}
 }
 
@@ -181,10 +179,11 @@ type errorMessage struct {
 }
 
 func (s *Server) handleError(w http.ResponseWriter, msg errorMessage) {
+	log.Printf("error %d: %s", msg.Status, msg.Text)
 	switch msg.Status {
 	case http.StatusNotFound:
-		s.respErrorNotFoundFunc(w, &msg)
+		s.respErrorNotFoundFunc(w, msg)
 	default:
-		s.respErrorFunc(w, &msg)
+		s.respErrorFunc(w, msg)
 	}
 }
