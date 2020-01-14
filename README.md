@@ -6,7 +6,7 @@ This is my personal blog (and the other website) written in Go
 
 - [x] routing
 - [x] models
-- [ ] database implementation
+- [x] database implementation
 - [ ] pages
     - [ ] articles
     - [ ] talks
